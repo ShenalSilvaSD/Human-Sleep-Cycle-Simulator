@@ -2,7 +2,7 @@
 
 [One-sentence pitch: what this simulation does and the question it answers.]
 
-**[Live demo](https://[your-github-user].github.io/[repository-name]/)** · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/[your-github-user]/[repository-name]/blob/main/notebook/project-name.ipynb)
+**[Live demo](https://[your-github-user].github.io/[repository-name]/)** · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/[your-github-user]/[repository-name]/blob/main/notebook/Human_Sleep_Cycle_Simulator.ipynb)
 
 ![Screenshot of the web demo](figures/demo-screenshot.png)
 
@@ -20,7 +20,7 @@
 
 ```bash
 pip install -r requirements.txt
-jupyter notebook notebook/project-name.ipynb
+jupyter notebook notebook/Human_Sleep_Cycle_Simulator.ipynb
 ```
 
 ## Using the demo
