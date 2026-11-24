@@ -1,6 +1,6 @@
-# User guide: [Project Title] web demo
+# Human Sleep Cycle Simulator web demo guide
 
-**Open the demo:** [https://[your-github-user].github.io/[repository-name]/]. It runs entirely in your browser (current Chrome, Edge or Firefox). Nothing is installed or uploaded.
+**Planned demo location:** [GitHub Pages](https://shenalsilvasd.github.io/Human-Sleep-Cycle-Simulator/). This guide is a draft. The current browser page contains the starter Monte Carlo π example.
 
 ![Labelled screenshot of the demo](figures/demo-screenshot-labelled.png)
 

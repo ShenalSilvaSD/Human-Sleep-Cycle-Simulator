@@ -1,8 +1,8 @@
-# [Project Title]
+# Human Sleep Cycle Simulator
 
-[One-sentence pitch: what this simulation does and the question it answers.]
+This project uses Sleep-EDF annotations to model sleep-stage transitions and study how nighttime awakenings affect Deep Sleep and REM duration.
 
-**[Live demo](https://[your-github-user].github.io/[repository-name]/)** · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/[your-github-user]/[repository-name]/blob/main/notebook/Human_Sleep_Cycle_Simulator.ipynb)
+**[GitHub repository](https://github.com/ShenalSilvaSD/Human-Sleep-Cycle-Simulator)** · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ShenalSilvaSD/Human-Sleep-Cycle-Simulator/blob/main/notebook/Human_Sleep_Cycle_Simulator.ipynb)
 
 ![Screenshot of the web demo](figures/demo-screenshot.png)
 
@@ -12,9 +12,9 @@
 
 ## Quick start
 
-**Notebook:** click the *Open in Colab* badge above, then *Runtime → Run all*. Everything installs and runs in about [N] minutes on a free runtime.
+**Notebook:** click the *Open in Colab* badge above, then *Runtime → Run all*. The current notebook downloads and processes the annotation subset and reports transition counts.
 
-**Web demo:** open the [live demo](https://[your-github-user].github.io/[repository-name]/), or download this repository and double-click `docs/index.html`.
+**Web demo:** the [GitHub Pages URL](https://shenalsilvasd.github.io/Human-Sleep-Cycle-Simulator/) is reserved for the sleep demo. The current `docs/index.html` contains the starter Monte Carlo π example.
 
 **Run locally (optional):**
 
