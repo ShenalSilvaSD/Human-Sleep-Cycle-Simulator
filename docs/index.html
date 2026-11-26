@@ -1,181 +1,570 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[Project Title]: Interactive Demo</title>
-<!--
-  STARTER TEMPLATE. The example simulation below is a Monte Carlo estimate of pi.
-  It is here only to show the required structure:
-    - at least three adjustable parameters
-    - Start / Pause / Reset
-    - a live visualisation
-    - at least one quantitative output, checked against a reference value
-    - an "About / How to use" panel
-  Replace the SIMULATION section and the controls with your own model.
--->
-<style>
-  :root { --ink:#1b2430; --muted:#5d6876; --line:#d8dee6; --accent:#1f6f8b; --bg:#f6f8fa; --ok:#1a7f37; --warn:#b35900; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
-  header { padding:16px 20px; background:#fff; border-bottom:1px solid var(--line); }
-  header h1 { margin:0; font-size:1.3rem; }
-  header p { margin:4px 0 0; color:var(--muted); font-size:.95rem; }
-  main { display:grid; grid-template-columns: 300px 1fr; gap:16px; padding:16px 20px; max-width:1200px; margin:0 auto; }
-  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
-  .panel { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px; }
-  label { display:block; font-size:.9rem; margin:12px 0 4px; }
-  label span { float:right; font-variant-numeric: tabular-nums; color:var(--muted); }
-  input[type=range] { width:100%; }
-  input[type=number] { width:100%; padding:6px; border:1px solid var(--line); border-radius:4px; }
-  .buttons { display:flex; gap:8px; margin-top:16px; }
-  button { flex:1; padding:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:6px; font-size:.95rem; cursor:pointer; }
-  button.secondary { background:#fff; color:var(--accent); }
-  canvas { width:100%; max-width:560px; aspect-ratio:1; display:block; margin:0 auto; background:#fff; border:1px solid var(--line); }
-  .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin-top:14px; }
-  .stat { border:1px solid var(--line); border-radius:6px; padding:10px; }
-  .stat .k { font-size:.8rem; color:var(--muted); }
-  .stat .v { font-size:1.2rem; font-variant-numeric: tabular-nums; }
-  .check.ok { color:var(--ok); } .check.warn { color:var(--warn); }
-  details { margin-top:16px; }
-  summary { cursor:pointer; font-weight:600; }
-  details p, details li { font-size:.92rem; line-height:1.45; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore how awakening probability affects a simulated night of sleep.">
+  <title>Human Sleep Cycle Simulator</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #eef3f7;
+      --surface: #fff;
+      --ink: #15273b;
+      --muted: #4f6174;
+      --border: #d6e0e8;
+      --accent: #125c67;
+      --wake: #a34b27;
+      --light: #16746f;
+      --deep: #325778;
+      --rem: #7050a0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--background); color: var(--ink); line-height: 1.5; }
+    h1, h2, p, figure, dl { margin: 0; }
+
+    .wrap { width: min(72rem, calc(100% - 3rem)); margin-inline: auto; }
+    .masthead { padding: 2.5rem 0 1.75rem; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.75rem); letter-spacing: -0.035em; line-height: 1.15; }
+    .masthead p { margin-top: 0.65rem; color: var(--muted); }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
+      gap: 1.25rem;
+      align-items: start;
+      padding-bottom: 2.5rem;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.9rem;
+      padding: 1.25rem;
+    }
+
+    h2 { font-size: 1.125rem; line-height: 1.3; }
+    .field { margin-top: 1.1rem; }
+    label { display: block; margin-bottom: 0.35rem; font-weight: 650; font-size: 0.9375rem; }
+    input, select, button { font: inherit; }
+    input, select {
+      display: block;
+      width: 100%;
+      min-height: 2.65rem;
+      padding: 0.5rem 0.65rem;
+      color: var(--ink);
+      background: var(--surface);
+      border: 1px solid #a4b5c3;
+      border-radius: 0.45rem;
+    }
+
+    .select-wrap { position: relative; }
+    select { appearance: none; padding-right: 2rem; }
+    .select-wrap::after {
+      content: "";
+      position: absolute;
+      top: 0.95rem;
+      right: 0.8rem;
+      width: 0.45rem;
+      height: 0.45rem;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+
+    :focus-visible { outline: 3px solid #207e8b; outline-offset: 2px; }
+    .hint, .status, .chart-note { color: var(--muted); font-size: 0.875rem; }
+    .hint { margin-top: 0.25rem; }
+    .buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; margin-top: 1.25rem; }
+    button {
+      min-height: 2.65rem;
+      padding: 0.4rem;
+      border: 1px solid var(--border);
+      border-radius: 0.45rem;
+      background: #f4f8fa;
+      color: var(--ink);
+      font-size: 0.875rem;
+      font-weight: 650;
+    }
+
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button:disabled { opacity: 0.65; cursor: not-allowed; }
+    .status { margin-top: 0.65rem; }
+    .progress { margin-top: 0.25rem; color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+    .how-to { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .how-to ol { margin: 0.65rem 0 0; padding-left: 1.25rem; color: var(--muted); font-size: 0.9375rem; }
+    .how-to li + li { margin-top: 0.5rem; }
+
+    .chart-note { margin-top: 0.35rem; }
+    .chart {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 0.7rem;
+      row-gap: 0.4rem;
+      margin-top: 1rem;
+    }
+
+    .stage-labels { display: grid; grid-template-rows: repeat(4, 1fr); margin: 0; padding: 1px 0; list-style: none; }
+    .stage-labels li { display: flex; align-items: center; gap: 0.45rem; font-size: 0.875rem; font-weight: 650; white-space: nowrap; }
+    .stage-labels li::before { content: ""; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--stage-color); }
+    .wake { --stage-color: var(--wake); }
+    .light { --stage-color: var(--light); }
+    .deep { --stage-color: var(--deep); }
+    .rem { --stage-color: var(--rem); }
+
+    .plot-area {
+      position: relative;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 0.45rem;
+      background-color: #f7fafc;
+      background-image: linear-gradient(to bottom, transparent calc(50% - 0.5px),
+                        #ccd9e3 calc(50% - 0.5px), #ccd9e3 calc(50% + 0.5px),
+                        transparent calc(50% + 0.5px));
+      background-size: 100% 25%;
+    }
+
+    .time-grid { position: absolute; inset: 0; pointer-events: none; }
+    .time-grid span {
+      position: absolute;
+      inset-block: 0;
+      left: var(--tick-position);
+      border-left: 1px solid var(--border);
+    }
+
+    canvas {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: clamp(11rem, 28vw, 17rem);
+    }
+
+    .time-axis { grid-column: 2; min-width: 0; padding-inline: 1px; }
+    .time-labels {
+      position: relative;
+      height: 1.45rem;
+      color: var(--muted);
+      font-size: 0.875rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .time-labels span {
+      position: absolute;
+      left: var(--tick-position);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .time-labels span:first-child { transform: none; }
+    .time-labels span:last-child { transform: translateX(-100%); }
+    .axis-title { font-size: 0.875rem; font-weight: 650; text-align: center; }
+
+    .results { margin-top: 1.35rem; padding-top: 1.15rem; border-top: 1px solid var(--border); }
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.65rem; margin-top: 0.75rem; }
+    .metric { padding: 0.75rem; background: #f4f8fa; border-radius: 0.5rem; }
+    dt { color: var(--muted); font-size: 0.875rem; }
+    dd { margin: 0.2rem 0 0; font-size: 1.35rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+    @media (max-width: 48rem) {
+      .wrap { width: min(72rem, calc(100% - 2rem)); }
+      main { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 28rem) {
+      .masthead { padding-top: 1.5rem; }
+      .panel { padding: 1rem; }
+      .chart { column-gap: 0.5rem; }
+      .stage-labels li { gap: 0.3rem; }
+      .time-labels { font-size: 0.8125rem; }
+      .metrics { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-<header>
-  <h1>[Project Title]</h1>
-  <p>[One-sentence description of what the simulation shows.]</p>
-</header>
+  <header class="masthead wrap">
+    <h1>Human Sleep Cycle Simulator</h1>
+    <p>Explore how a higher chance of waking changes the stages of one simulated night.</p>
+  </header>
 
-<main>
-  <section class="panel" aria-label="Controls">
-    <!-- REPLACE: your own parameters (at least three) -->
-    <label for="nTotal">Total samples <span id="nTotalVal"></span></label>
-    <input id="nTotal" type="range" min="1000" max="200000" step="1000" value="50000">
+  <main class="wrap">
+    <section class="panel" aria-labelledby="controls-heading">
+      <h2 id="controls-heading">Simulation controls</h2>
 
-    <label for="speed">Samples per frame (speed) <span id="speedVal"></span></label>
-    <input id="speed" type="range" min="10" max="5000" step="10" value="200">
+      <div class="field">
+        <label for="awakening-multiplier">Awakening multiplier</label>
+        <input id="awakening-multiplier" type="number" min="1" step="any" value="1" required aria-describedby="multiplier-hint">
+        <p class="hint" id="multiplier-hint">Use 1 for the baseline or a higher value to increase the chance of waking.</p>
+      </div>
 
-    <label for="seed">Random seed</label>
-    <input id="seed" type="number" value="42" min="1" step="1">
+      <div class="field">
+        <label for="night-duration">Night duration (hours)</label>
+        <input id="night-duration" type="number" min="0.5" step="0.5" value="8" required>
+      </div>
 
-    <div class="buttons">
-      <button id="startBtn">Start</button>
-      <button id="resetBtn" class="secondary">Reset</button>
-    </div>
+      <div class="field">
+        <label for="animation-speed">Animation speed</label>
+        <div class="select-wrap">
+          <select id="animation-speed">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </div>
+      </div>
 
-    <details>
-      <summary>About / How to use</summary>
-      <!-- REPLACE: explain your model, its parameters and how to read the outputs -->
-      <p>This example estimates &pi; by sampling random points in a unit square and counting the fraction that falls inside the quarter circle: &pi; &asymp; 4 &times; (inside / total).</p>
-      <ul>
-        <li>Set the parameters, then press <b>Start</b>. <b>Pause</b> stops the run; <b>Reset</b> clears it and applies new settings.</li>
-        <li>The estimate is shown with a 95% confidence interval. The error should shrink roughly as 1/&radic;N.</li>
-        <li>The check compares the estimate with the reference value; the notebook gives the same result for the default settings.</li>
-      </ul>
-    </details>
-  </section>
+      <div class="buttons" aria-describedby="simulation-status">
+        <button id="start" class="primary" type="button">Start</button>
+        <button id="pause" type="button" disabled>Pause</button>
+        <button id="reset" type="button" disabled>Reset</button>
+      </div>
+      <p class="status" id="simulation-status" role="status">Ready to generate a simulated night.</p>
+      <p class="status progress" id="simulation-progress" hidden></p>
 
-  <section class="panel" aria-label="Simulation">
-    <canvas id="view" width="560" height="560" aria-label="Live visualisation"></canvas>
-    <div class="stats">
-      <div class="stat"><div class="k">Samples so far</div><div class="v" id="outN">0</div></div>
-      <div class="stat"><div class="k">Estimate &plusmn; 95% CI</div><div class="v" id="outEst">–</div></div>
-      <div class="stat"><div class="k">Reference value</div><div class="v" id="outRef">3.14159</div></div>
-      <div class="stat"><div class="k">Check</div><div class="v check" id="outCheck">–</div></div>
-    </div>
-  </section>
-</main>
+      <section class="how-to" aria-labelledby="instructions-heading">
+        <h2 id="instructions-heading">How to Use</h2>
+        <ol>
+          <li>Choose a multiplier, night duration, and animation speed.</li>
+          <li>Start a night, pause to inspect it, or reset to clear the timeline.</li>
+          <li>Read Deep Sleep and REM minutes and the awakening count for that night.</li>
+        </ol>
+      </section>
+    </section>
 
-<script>
-// ---------- seeded random number generator (reproducible runs) ----------
-function mulberry32(a) {
-  return function () {
-    a |= 0; a = a + 0x6D2B79F5 | 0;
-    let t = Math.imul(a ^ a >>> 15, 1 | a);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
+    <section class="panel" aria-labelledby="hypnogram-heading">
+      <h2 id="hypnogram-heading">Sleep-stage timeline</h2>
+      <p class="chart-note" id="hypnogram-note">The hypnogram shows one stage per 30-second epoch.</p>
 
-// ---------- SIMULATION (REPLACE with your own model) ----------
-const REFERENCE = Math.PI;          // analytic / notebook reference value
-const sim = { rng: null, n: 0, inside: 0, nTotal: 0 };
+      <figure class="chart">
+        <ul class="stage-labels" aria-label="Sleep stages">
+          <li class="wake">Wake</li>
+          <li class="rem">REM</li>
+          <li class="light">Light</li>
+          <li class="deep">Deep</li>
+        </ul>
+        <div class="plot-area">
+          <div class="time-grid" id="time-grid" aria-hidden="true"></div>
+          <canvas id="hypnogram" width="960" height="320" role="img" aria-label="Simulated sleep-stage timeline" aria-describedby="hypnogram-note time-axis-title">
+            The sleep-stage timeline will be drawn here.
+          </canvas>
+        </div>
+        <figcaption class="time-axis">
+          <div class="time-labels" id="time-labels"></div>
+          <p class="axis-title" id="time-axis-title">Time since window start (hours)</p>
+        </figcaption>
+      </figure>
 
-function initSim(params) {
-  sim.rng = mulberry32(params.seed);
-  sim.n = 0; sim.inside = 0; sim.nTotal = params.nTotal;
-}
+      <section class="results" aria-labelledby="results-heading">
+        <h2 id="results-heading">This simulated night</h2>
+        <dl class="metrics">
+          <div class="metric">
+            <dt>Deep Sleep (min)</dt>
+            <dd id="deep-sleep-result">0.0</dd>
+          </div>
+          <div class="metric">
+            <dt>REM (min)</dt>
+            <dd id="rem-result">0.0</dd>
+          </div>
+          <div class="metric">
+            <dt>Awakenings</dt>
+            <dd id="awakening-result">0</dd>
+          </div>
+        </dl>
+      </section>
+    </section>
+  </main>
 
-function stepSim(k, draw) {                 // advance the model by k samples
-  for (let i = 0; i < k && sim.n < sim.nTotal; i++) {
-    const x = sim.rng(), y = sim.rng();
-    const hit = x * x + y * y <= 1;
-    sim.n++; if (hit) sim.inside++;
-    draw(x, y, hit);
-  }
-}
+  <script>
+    // Unrounded probabilities from the notebook's training cells.
+    const sleepModel = {
+      states: ["Wake", "Light", "Deep", "REM"],
+      transitionProbabilities: [
+        [0.9357190192180251, 0.06262425447316103, 0.0003313452617627568, 0.0013253810470510272],
+        [0.01558193767224931, 0.9287682849268603, 0.03762984948060208, 0.01801992792028832],
+        [0.0038151759220008477, 0.14497668503603223, 0.850784230606189, 0.000423908435777872],
+        [0.011267605633802818, 0.042566510172143975, 0.0, 0.9461658841940532],
+      ],
+      initialProbabilities: [1.0, 0.0, 0.0, 0.0],
+    };
 
-function estimate() {                       // quantitative output with uncertainty
-  if (sim.n === 0) return null;
-  const p = sim.inside / sim.n;
-  const est = 4 * p;
-  const se = 4 * Math.sqrt(p * (1 - p) / sim.n);
-  return { est, ci: 1.96 * se };
-}
+    function validateProbabilityVector(probabilities, label) {
+      if (probabilities.length !== sleepModel.states.length ||
+          !probabilities.every(value => Number.isFinite(value) && value >= 0 && value <= 1)) {
+        throw new Error(`${label} must have a probability between 0 and 1 for each sleep stage.`);
+      }
+      const total = probabilities.reduce((sum, value) => sum + value, 0);
+      if (Math.abs(total - 1) > 1e-12) {
+        throw new Error(`${label} probabilities must sum to 1.`);
+      }
+    }
 
-// ---------- UI wiring (keep the pattern, adapt the details) ----------
-const $ = (id) => document.getElementById(id);
-const ctx = $("view").getContext("2d");
-let running = false, frame = null;
+    function validateTransitionMatrix(transitionProbabilities) {
+      if (transitionProbabilities.length !== sleepModel.states.length) {
+        throw new Error("The transition matrix must have one row per sleep stage.");
+      }
+      transitionProbabilities.forEach((row, index) => {
+        validateProbabilityVector(row, `${sleepModel.states[index]} transition row`);
+      });
+    }
 
-function params() {
-  return { nTotal: +$("nTotal").value, speed: +$("speed").value, seed: Math.max(1, Math.floor(+$("seed").value) || 1) };
-}
-function showParams() {
-  $("nTotalVal").textContent = (+$("nTotal").value).toLocaleString();
-  $("speedVal").textContent = (+$("speed").value).toLocaleString();
-}
-function clearView() {
-  const w = ctx.canvas.width;
-  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, w);
-  ctx.strokeStyle = "#1b2430"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(0, w, w, -Math.PI / 2, 0); ctx.stroke();
-}
-function drawPoint(x, y, hit) {
-  const w = ctx.canvas.width;
-  ctx.fillStyle = hit ? "rgba(31,111,139,0.55)" : "rgba(179,89,0,0.55)";
-  ctx.fillRect(x * w, (1 - y) * w, 1.5, 1.5);
-}
-function showOutputs() {
-  $("outN").textContent = sim.n.toLocaleString();
-  const e = estimate();
-  if (!e) { $("outEst").textContent = "–"; $("outCheck").textContent = "–"; $("outCheck").className = "v check"; return; }
-  $("outEst").textContent = `${e.est.toFixed(4)} ± ${e.ci.toFixed(4)}`;
-  const ok = Math.abs(e.est - REFERENCE) <= e.ci;
-  $("outCheck").textContent = ok ? "Within CI" : "Outside CI";
-  $("outCheck").className = "v check " + (ok ? "ok" : "warn");
-}
-function loop() {
-  stepSim(params().speed, drawPoint);
-  showOutputs();
-  if (sim.n >= sim.nTotal) { stop(); $("startBtn").textContent = "Done"; $("startBtn").disabled = true; return; }
-  frame = requestAnimationFrame(loop);
-}
-function start() { running = true; $("startBtn").textContent = "Pause"; frame = requestAnimationFrame(loop); }
-function stop() { running = false; if (frame) cancelAnimationFrame(frame); $("startBtn").textContent = "Start"; }
-function reset() {
-  stop(); initSim(params()); clearView(); showOutputs();
-  $("startBtn").disabled = false; $("startBtn").textContent = "Start";
-}
+    function adjustAwakeningProbabilities(transitionProbabilities, multiplier) {
+      if (!Number.isFinite(multiplier) || multiplier < 1) {
+        throw new RangeError("The awakening multiplier must be finite and at least 1.");
+      }
+      validateTransitionMatrix(transitionProbabilities);
 
-$("startBtn").addEventListener("click", () => (running ? stop() : start()));
-$("resetBtn").addEventListener("click", reset);
-["nTotal", "speed"].forEach((id) => $(id).addEventListener("input", showParams));
-["nTotal", "seed"].forEach((id) => $(id).addEventListener("change", reset));
-$("outRef").textContent = REFERENCE.toFixed(5);
-showParams(); reset();
-</script>
+      const wakeIndex = sleepModel.states.indexOf("Wake");
+      const sleepRows = transitionProbabilities.filter((_, index) => index !== wakeIndex);
+      const largestWakeProbability = Math.max(...sleepRows.map(row => row[wakeIndex]));
+      const maxMultiplier = largestWakeProbability > 0 ? 1 / largestWakeProbability : Infinity;
+      if (multiplier > maxMultiplier) {
+        throw new RangeError(`The awakening multiplier must be between 1 and ${maxMultiplier}.`);
+      }
+
+      const adjusted = transitionProbabilities.map((row, index) => {
+        if (index === wakeIndex || multiplier === 1) return row.slice();
+        const wakeProbability = row[wakeIndex];
+        // Guard against floating-point overshoot at the validated upper limit.
+        const newWakeProbability = Math.min(multiplier * wakeProbability, 1);
+        const remainingScale = (1 - newWakeProbability) / (1 - wakeProbability);
+        return row.map((probability, column) =>
+          column === wakeIndex ? newWakeProbability : probability * remainingScale
+        );
+      });
+      validateTransitionMatrix(adjusted);
+      return adjusted;
+    }
+
+    function cumulativeProbabilities(probabilities) {
+      let total = 0;
+      const cumulative = probabilities.map(probability => {
+        total += probability;
+        return total;
+      });
+      return cumulative.map(value => value / total);
+    }
+
+    function simulateNight(multiplier = 1, hours = 8, random = Math.random) {
+      const epochCount = hours * 60 * 60 / 30;
+      if (!Number.isSafeInteger(epochCount) || epochCount < 1) {
+        throw new RangeError("Night duration must contain a positive whole number of 30-second epochs.");
+      }
+
+      const adjusted = adjustAwakeningProbabilities(sleepModel.transitionProbabilities, multiplier);
+      const transitionRows = adjusted.map(cumulativeProbabilities);
+      const initialRow = cumulativeProbabilities(sleepModel.initialProbabilities);
+      const sampleStageIndex = row => {
+        const draw = random();
+        return row.findIndex(probability => draw < probability);
+      };
+
+      let stageIndex = sampleStageIndex(initialRow);
+      const stages = [sleepModel.states[stageIndex]];
+      for (let epoch = 1; epoch < epochCount; epoch++) {
+        stageIndex = sampleStageIndex(transitionRows[stageIndex]);
+        stages.push(sleepModel.states[stageIndex]);
+      }
+      return stages;
+    }
+
+    validateTransitionMatrix(sleepModel.transitionProbabilities);
+    validateProbabilityVector(sleepModel.initialProbabilities, "Initial stage");
+
+    const multiplierInput = document.getElementById("awakening-multiplier");
+    const durationInput = document.getElementById("night-duration");
+    const speedInput = document.getElementById("animation-speed");
+    const startButton = document.getElementById("start");
+    const pauseButton = document.getElementById("pause");
+    const resetButton = document.getElementById("reset");
+    const simulationStatus = document.getElementById("simulation-status");
+    const simulationProgress = document.getElementById("simulation-progress");
+    const timeLabels = document.getElementById("time-labels");
+    const timeGrid = document.getElementById("time-grid");
+    const deepSleepResult = document.getElementById("deep-sleep-result");
+    const remResult = document.getElementById("rem-result");
+    const awakeningResult = document.getElementById("awakening-result");
+    const hypnogram = document.getElementById("hypnogram");
+    const chartContext = hypnogram.getContext("2d");
+    const chartStages = ["Wake", "REM", "Light", "Deep"];
+    const chartStyle = getComputedStyle(hypnogram);
+    const stageColors = Object.fromEntries(chartStages.map(stage =>
+      [stage, chartStyle.getPropertyValue(`--${stage.toLowerCase()}`).trim()]
+    ));
+    const baseEpochsPerSecond = 120;
+
+    let simulatedStages = [];
+    let animationFrame = null;
+    let resumePlayback = null;
+    let playbackState = "ready";
+
+    function updateTimeAxis(hours) {
+      const step = hours <= 1 ? 0.25 : hours <= 2 ? 0.5 : hours <= 4 ? 1 : Math.max(2, Math.round(hours / 5));
+      const ticks = [0];
+      for (let hour = step; hour < hours && hours - hour >= step * 0.65; hour += step) {
+        ticks.push(hour);
+      }
+      ticks.push(hours);
+
+      timeLabels.replaceChildren();
+      timeGrid.replaceChildren();
+      for (const hour of ticks) {
+        const position = `${100 * hour / hours}%`;
+        const label = document.createElement("span");
+        label.style.setProperty("--tick-position", position);
+        label.textContent = `${hour}h`;
+        timeLabels.append(label);
+        if (hour > 0 && hour < hours) {
+          const line = document.createElement("span");
+          line.style.setProperty("--tick-position", position);
+          timeGrid.append(line);
+        }
+      }
+    }
+
+    durationInput.addEventListener("input", () => {
+      if (playbackState === "ready" && durationInput.validity.valid) updateTimeAxis(durationInput.valueAsNumber);
+    });
+    updateTimeAxis(durationInput.validity.valid ? durationInput.valueAsNumber : Number(durationInput.defaultValue));
+
+    function setPlaybackState(state) {
+      playbackState = state;
+      const active = state === "running" || state === "paused";
+      startButton.disabled = active;
+      pauseButton.disabled = !active;
+      pauseButton.textContent = state === "paused" ? "Resume" : "Pause";
+      resetButton.disabled = state === "ready";
+    }
+
+    function resetReadouts() {
+      deepSleepResult.textContent = "0.0";
+      remResult.textContent = "0.0";
+      awakeningResult.textContent = "0";
+    }
+
+    function stagePosition(stage) {
+      return (chartStages.indexOf(stage) + 0.5) * hypnogram.height / chartStages.length;
+    }
+
+    function animateHypnogram(stages) {
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+      chartContext.clearRect(0, 0, hypnogram.width, hypnogram.height);
+      chartContext.lineWidth = 2;
+
+      let previousTime;
+      let elapsedEpochs = 0;
+      let drawnEpochs = 0;
+      let deepMinutes = 0;
+      let remMinutes = 0;
+      let awakenings = 0;
+      resetReadouts();
+      simulationProgress.hidden = false;
+      simulationProgress.textContent = `Epoch 0 of ${stages.length}`;
+
+      function drawFrame(timestamp) {
+        const elapsedSeconds = (timestamp - (previousTime ?? timestamp)) / 1000;
+        previousTime = timestamp;
+        elapsedEpochs += elapsedSeconds * baseEpochsPerSecond * Number(speedInput.value);
+        const target = Math.min(stages.length, Math.floor(elapsedEpochs));
+        const previousEpoch = drawnEpochs;
+
+        while (drawnEpochs < target) {
+          const stage = stages[drawnEpochs];
+          const startX = drawnEpochs / stages.length * hypnogram.width;
+          const endX = (drawnEpochs + 1) / stages.length * hypnogram.width;
+          const y = stagePosition(stage);
+          const previousY = drawnEpochs === 0 ? y : stagePosition(stages[drawnEpochs - 1]);
+          chartContext.strokeStyle = stageColors[stage];
+          chartContext.beginPath();
+          chartContext.moveTo(startX, previousY);
+          chartContext.lineTo(startX, y);
+          chartContext.lineTo(endX, y);
+          chartContext.stroke();
+
+          if (stage === "Deep") {
+            deepMinutes += 0.5;
+            deepSleepResult.textContent = deepMinutes.toFixed(1);
+          } else if (stage === "REM") {
+            remMinutes += 0.5;
+            remResult.textContent = remMinutes.toFixed(1);
+          } else if (stage === "Wake" && drawnEpochs > 0 && stages[drawnEpochs - 1] !== "Wake") {
+            awakenings++;
+            awakeningResult.textContent = String(awakenings);
+          }
+          drawnEpochs++;
+        }
+
+        if (drawnEpochs !== previousEpoch) {
+          simulationProgress.textContent = `Epoch ${drawnEpochs} of ${stages.length}`;
+        }
+        if (drawnEpochs === stages.length) {
+          animationFrame = null;
+          resumePlayback = null;
+          setPlaybackState("completed");
+          simulationStatus.textContent = "Night complete.";
+        } else {
+          animationFrame = requestAnimationFrame(drawFrame);
+        }
+      }
+
+      resumePlayback = () => {
+        previousTime = undefined;
+        animationFrame = requestAnimationFrame(drawFrame);
+      };
+      setPlaybackState("running");
+      resumePlayback();
+    }
+
+    pauseButton.addEventListener("click", () => {
+      if (playbackState === "running") {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+        setPlaybackState("paused");
+        simulationStatus.textContent = "Playback paused.";
+      } else if (playbackState === "paused") {
+        resumePlayback();
+        setPlaybackState("running");
+        simulationStatus.textContent = "Playing simulated night.";
+      }
+    });
+
+    resetButton.addEventListener("click", () => {
+      if (playbackState === "ready") return;
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+      resumePlayback = null;
+      simulatedStages = [];
+      chartContext.clearRect(0, 0, hypnogram.width, hypnogram.height);
+      resetReadouts();
+      simulationProgress.hidden = true;
+      simulationProgress.textContent = "";
+      multiplierInput.value = multiplierInput.defaultValue;
+      durationInput.value = durationInput.defaultValue;
+      speedInput.value = speedInput.querySelector("option[selected]").value;
+      updateTimeAxis(Number(durationInput.defaultValue));
+      setPlaybackState("ready");
+      simulationStatus.textContent = "Ready to generate a simulated night.";
+    });
+
+    startButton.addEventListener("click", () => {
+      if (startButton.disabled) return;
+      if (!multiplierInput.reportValidity() || !durationInput.reportValidity()) {
+        simulationStatus.textContent = "Check the multiplier and duration, then try again.";
+        return;
+      }
+
+      try {
+        simulatedStages = simulateNight(multiplierInput.valueAsNumber, durationInput.valueAsNumber);
+        updateTimeAxis(durationInput.valueAsNumber);
+        simulationStatus.textContent = "Playing simulated night.";
+        animateHypnogram(simulatedStages);
+      } catch (error) {
+        if (!(error instanceof RangeError)) throw error;
+        simulationStatus.textContent = error.message;
+      }
+    });
+  </script>
 </body>
 </html>
