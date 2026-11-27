@@ -43,6 +43,10 @@ Notebook checks cover stage mapping, invalid gaps, participant separation, proba
 
 *Notebook output: one seeded baseline night. The plot illustrates the 960-epoch timeline. Duration, stage validity, and reproducibility are checked separately in the notebook.*
 
+A deterministic Markov recurrence independently checks both scenario means and their paired effects. All nine expectations lie within their pointwise 95% Monte Carlo intervals. In a separate baseline REM experiment, the measured log-log error slope was −0.5288, close to the expected −0.5. The convergence estimate uses 32 repetitions at each of five sample sizes and concerns baseline REM sampling error.
+
+[Independent verification method](THEORY.md#independent-verification-and-monte-carlo-convergence) · [Log-log convergence figure](figures/x2_rem_convergence.png)
+
 ## Concepts applied
 
 This project applies empirical categorical probability estimation, discrete-time Markov chains, inverse-transform sampling, paired Monte Carlo simulation with common random numbers, and Student’s t confidence intervals. Participant-level holdout validation compares observed one-step transitions with the fitted probabilities.
@@ -58,6 +62,12 @@ The final experiment used 10,000 paired eight-hour nights with master seed 4042.
 | Awakenings/night | 10.147 | 17.498 | +7.351 | [7.300, 7.402] |
 
 ![Grouped bars comparing Deep and REM minutes and awakenings per night](figures/monte_carlo_results_comparison.png)
+
+### Sensitivity and Uncertainty Analysis
+
+A sweep of six awakening multipliers from 1 to 3 used 2,000 matched nights per setting. At multiplier 3, the mean paired changes from baseline were −15.520 Deep Sleep minutes, −34.840 REM minutes, and +13.003 awakenings per night. REM lost more time than Deep Sleep at every non-baseline setting. The pointwise intervals show Monte Carlo uncertainty under the fitted model.
+
+[Sensitivity method](THEORY.md#sensitivity-and-uncertainty-analysis) · [Mean outcomes](figures/x5_mean_sensitivity.png) · [Paired changes](figures/x5_paired_sensitivity.png)
 
 ## Limitations and future work
 

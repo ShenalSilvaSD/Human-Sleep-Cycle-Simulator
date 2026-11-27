@@ -61,3 +61,30 @@ Here $t_{0.975,R-1}$ is the 97.5th percentile of Student’s t distribution with
 | Browser parity | The [fixed-draw test](USER_GUIDE.md#check-against-the-notebook) matched all 960 stages and all three metrics at each tested multiplier. |
 
 The six held-out recordings from three separate participants supplied 6,901 transitions. The largest absolute held-out minus training difference was 2.21 percentage points for REM persistence. Sleep-to-Wake differences were +0.27, +0.33, and +0.62 percentage points for Light, Deep, and REM respectively. These checks compare one-step conditional frequencies. Validation of complete-night dynamics and population-level inference remain open. See the [references](REFERENCES.md) for the dataset, mathematical background, and related sleep models.
+
+## Independent verification and Monte Carlo convergence
+
+The [notebook](notebook/Human_Sleep_Cycle_Simulator.ipynb) propagates the stage distribution for each fitted scenario using $q_0=\pi$ and $q_{t+1}=q_tP$. The expected minutes in stage $j$ are $0.5\sum_{t=0}^{959} q_t(j)$. The expected count of awakenings is $\sum_{t=0}^{958}\sum_{i\in\{L,D,R\}} q_t(i)P_{iW}$. These are finite-window expectations and require no sampled nights.
+
+| Outcome | Baseline expectation | Multiplier-2 expectation | Expected difference |
+|---|---:|---:|---:|
+| Deep Sleep (min/night) | 62.3903 | 53.7751 | −8.6152 |
+| REM (min/night) | 84.0651 | 63.0528 | −21.0123 |
+| Awakenings/night | 10.1011 | 17.4601 | +7.3590 |
+
+All nine expectations, including the three paired effects, fell within the corresponding pointwise 95% Monte Carlo intervals. The largest discrepancy was 1.693 standard errors, below the Bonferroni-adjusted threshold of 2.774. The notebook also checks probability conservation and exact outcomes for a night that stays in Wake and an alternating Wake–Light sequence.
+
+For baseline REM, 32 independent repetitions at each of 16, 32, 64, 128, and 256 nights give RMSEs of 7.9746, 6.7112, 4.1307, 2.4448, and 2.1141 minutes against the deterministic expectation. The fitted log-log slope is **−0.5288**, close to the theoretical **−0.5** for the mean of independent nights. The line’s height uses the separate baseline sample standard deviation from the final experiment. Finite repetitions make the observed slope noisy, and this check concerns simulation error under the fitted model.
+
+![Log-log baseline REM estimation error against an inverse-square-root reference](figures/x2_rem_convergence.png)
+
+## Sensitivity and Uncertainty Analysis
+
+The [notebook's sensitivity sweep](notebook/Human_Sleep_Cycle_Simulator.ipynb) uses multipliers 1, 1.25, 1.5, 2, 2.5, and 3. Each arm uses 2,000 nights from a matched design using the first 2,000 child streams of the original master seed, 4042. The baseline and multiplier-2 outcomes are reused from the original experiment. Only the other four settings are simulated. For each outcome the notebook computes both a pointwise 95% t interval for the mean and a pointwise 95% t interval on the within-night differences from baseline. The intervals quantify Monte Carlo uncertainty conditional on the fitted model. They do not provide simultaneous coverage across the sweep or include uncertainty in the fitted probabilities.
+
+At multiplier 3, the mean paired changes were **−15.5195 Deep Sleep minutes** (95% CI [−16.1249, −14.9141]), **−34.8402 REM minutes** ([−35.8624, −33.8181]), and **+13.0030 awakenings per night** ([12.8558, 13.1502]). REM lost more time than Deep Sleep at every setting above baseline. The awakening count increased at each tested setting. These results apply to changes in the model parameter over the tested range.
+
+The notebook checks exact replay of eight nights at each setting, checks the interval limits against SciPy, and tests the sampled means and paired differences against the independent Markov recurrence. The largest discrepancy was 1.577 standard errors, below the joint tolerance of 3.176.
+
+- [Mean outcomes with pointwise intervals](figures/x5_mean_sensitivity.png)
+- [Paired changes with pointwise intervals](figures/x5_paired_sensitivity.png)
